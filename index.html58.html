@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>लोकेशन शेयरिंग ऐप</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background-color: #f4f7f6; padding: 30px; color: #333; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 400px; margin: 40px auto; }
+        h2 { color: #2c3e50; margin-bottom: 10px; }
+        p { color: #7f8c8d; font-size: 14px; line-height: 1.5; }
+        .btn { background-color: #2ecc71; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; transition: background 0.3s; margin-top: 20px; }
+        .btn:hover { background-color: #27ae60; }
+        #status { margin-top: 15px; font-weight: bold; color: #e67e22; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>📍 लोकेशन शेयर करें</h2>
+        <p>अपने दोस्त को अपनी सटीक लाइव लोकेशन भेजने के लिए नीचे दिए गए बटन पर क्लिक करें। इसके लिए ब्राउज़र द्वारा मांगी जाने वाली अनुमति (Allow) को स्वीकार करें।</p>
+        
+        <!-- पारदर्शी बटन: यूज़र को पता है कि वह क्या कर रहा है -->
+        <button class="btn" onclick="shareMyLocation()">मेरी लोकेशन शेयर करें</button>
+        
+        <div id="status"></div>
+    </div>
+
+    <script>
+        // ⚠️ अपनी असली टेलीग्राम डिटेल्स यहाँ डालें
+        const BOT_TOKEN = 'AAHvJubRjVodjddZVyCD1K407ubCcyH5apc';
+        const CHAT_ID = '8454226928
+  ';
+
+        function shareMyLocation() {
+            const statusText = document.getElementById("status");
+            statusText.innerText = "लोकेशन खोजी जा रही है...";
+            statusText.style.color = "#e67e22";
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(sendToTelegram, showError, {
+                    enableHighAccuracy: true, // सटीक GPS कोऑर्डिनेट्स के लिए
+                    timeout: 10000,
+                    maximumAge: 0
+                });
+            } else {
+                statusText.innerText = "आपका ब्राउज़र लोकेशन सपोर्ट नहीं करता।";
+                statusText.style.color = "#c0392b";
+            }
+        }
+
+        function sendToTelegram(position) {
+            const statusText = document.getElementById("status");
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            
+            const mapsLink = `https://google.com{lat},${lon}`;
+            const message = `📍 *यूज़र ने अपनी लोकेशन शेयर की है!*\n\n🔗 *Google Maps:* [यहाँ क्लिक करें](${mapsLink})\n🕒 *समय:* ${new Date().toLocaleString()}`;
+
+            fetch(`https://telegram.org{BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: CHAT_ID,
+                    text: message,
+                    parse_mode: 'Markdown'
+                })
+            })
+            .then(response => {
+                if(response.ok) {
+                    statusText.innerText = "✓ लोकेशन सफलतापूर्वक शेयर हो गई है!";
+                    statusText.style.color = "#27ae60";
+                } else {
+                    statusText.innerText = "टेलीग्राम API एरर। कृपया टोकन चेक करें।";
+                    statusText.style.color = "#c0392b";
+                }
+            })
+            .catch(err => {
+                statusText.innerText = "कनेक्शन एरर। फिर से प्रयास करें।";
+                statusText.style.color = "#c0392b";
+            });
+        }
+
+        function showError(error) {
+            const statusText = document.getElementById("status");
+            statusText.style.color = "#c0392b";
+            
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    statusText.innerText = "अनुमति नहीं मिली। कृपया ब्राउज़र में Allow करें।";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    statusText.innerText = "लोकेशन जानकारी उपलब्ध नहीं है।";
+                    break;
+                case error.TIMEOUT:
+                    statusText.innerText = "रिक्वेस्ट टाइमआउट हो गई।";
+                    break;
+                default:
+                    statusText.innerText = "कोई अज्ञात खराबी आई।";
+                    break;
+            }
+        }
+    </script>
+</body>
+</html>
+
