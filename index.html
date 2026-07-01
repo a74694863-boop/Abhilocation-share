@@ -1,50 +1,55 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>लोकेशन शेयरिंग ऐप</title>
+    <title>Live Location Sharing Tool</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background-color: #f4f7f6; padding: 30px; color: #333; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 400px; margin: 40px auto; }
-        h2 { color: #2c3e50; margin-bottom: 10px; }
-        p { color: #7f8c8d; font-size: 14px; line-height: 1.5; }
-        .btn { background-color: #2ecc71; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; transition: background 0.3s; margin-top: 20px; }
-        .btn:hover { background-color: #27ae60; }
-        #status { margin-top: 15px; font-weight: bold; color: #e67e22; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; background-color: #f8fafc; padding: 20px; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .card { background: #ffffff; padding: 40px 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); max-width: 400px; width: 100%; box-sizing: border-box; }
+        .icon { font-size: 48px; margin-bottom: 15px; }
+        h2 { color: #1e293b; margin: 0 0 10px 0; font-size: 24px; }
+        p { color: #64748b; font-size: 14px; line-height: 1.6; margin: 0 0 25px 0; }
+        .btn { background-color: #10b981; color: white; border: none; padding: 14px 28px; font-size: 16px; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; transition: all 0.2s ease; shadow: 0 4px 6px rgba(16, 185, 129, 0.2); }
+        .btn:hover { background-color: #059669; transform: translateY(-1px); }
+        .btn:active { transform: translateY(1px); }
+        #status { margin-top: 20px; font-weight: 600; font-size: 15px; color: #f59e0b; min-height: 22px; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2>📍 लोकेशन शेयर करें</h2>
-        <p>अपने दोस्त को अपनी सटीक लाइव लोकेशन भेजने के लिए नीचे दिए गए बटन पर क्लिक करें। इसके लिए ब्राउज़र द्वारा मांगी जाने वाली अनुमति (Allow) को स्वीकार करें।</p>
+        <div class="icon">📍</div>
+        <h2>Share Live Location</h2>
+        <p>Click the button below to share your precise GPS location with your friend. Please tap "Allow" when the browser asks for your location permission.</p>
         
-        <!-- पारदर्शी बटन: यूज़र को पता है कि वह क्या कर रहा है -->
-        <button class="btn" onclick="shareMyLocation()">मेरी लोकेशन शेयर करें</button>
+        <!-- Action Button -->
+        <button class="btn" onclick="shareMyLocation()">Share My Location</button>
         
+        <!-- Live Status Tracker -->
         <div id="status"></div>
     </div>
 
     <script>
-        // ⚠️ अपनी असली टेलीग्राम डिटेल्स यहाँ डालें
-        const BOT_TOKEN = '8967585991:AAH1eHdBlMFxeiseF3Nr7ZDQCQwyvye31Ts';
-        const CHAT_ID = '8967585991';
+        // ⚠️ 1. REPLACE THESE VARIABLES WITH YOUR CORRECT TELEGRAM DETAILS
+        const BOT_TOKEN = '8967585991:AAH1eHdBlMFxeiseF3Nr7ZDQCQwyvye31Ts'; // e.g., '123456789:ABCdef...'
+        const CHAT_ID = '8967585991';                // Your Verified Chat ID
 
         function shareMyLocation() {
             const statusText = document.getElementById("status");
-            statusText.innerText = "लोकेशन खोजी जा रही है...";
-            statusText.style.color = "#e67e22";
+            statusText.innerText = "Finding your location...";
+            statusText.style.color = "#f59e0b"; // Orange
 
             if (navigator.geolocation) {
+                // Fetch location coordinates from device
                 navigator.geolocation.getCurrentPosition(sendToTelegram, showError, {
-                    enableHighAccuracy: true, // सटीक GPS कोऑर्डिनेट्स के लिए
-                    timeout: 10000,
+                    enableHighAccuracy: true, // For precise GPS mapping
+                    timeout: 12000,
                     maximumAge: 0
                 });
             } else {
-                statusText.innerText = "आपका ब्राउज़र लोकेशन सपोर्ट नहीं करता।";
-                statusText.style.color = "#c0392b";
+                statusText.innerText = "Error: Geolocation is not supported by this browser.";
+                statusText.style.color = "#ef4444"; // Red
             }
         }
 
@@ -53,9 +58,13 @@
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
             
+            // Construct official Google Maps Query URL
             const mapsLink = `https://google.com{lat},${lon}`;
-            const message = `📍 *यूज़र ने अपनी लोकेशन शेयर की है!*\n\n🔗 *Google Maps:* [यहाँ क्लिक करें](${mapsLink})\n🕒 *समय:* ${new Date().toLocaleString()}`;
+            
+            // Format the final markdown message for Telegram
+            const message = `📍 *User shared their location!*\n\n🔗 *Google Maps:* [Open Map](${mapsLink})\n🕒 *Time:* ${new Date().toLocaleString()}`;
 
+            // Execute the secure network request to Telegram API
             fetch(`https://telegram.org{BOT_TOKEN}/sendMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -66,36 +75,36 @@
                 })
             })
             .then(response => {
-                if(response.ok) {
-                    statusText.innerText = "✓ लोकेशन सफलतापूर्वक शेयर हो गई है!";
-                    statusText.style.color = "#27ae60";
+                if (response.ok) {
+                    statusText.innerText = "✓ Location shared successfully!";
+                    statusText.style.color = "#10b981"; // Green
                 } else {
-                    statusText.innerText = "टेलीग्राम API एरर। कृपया टोकन चेक करें।";
-                    statusText.style.color = "#c0392b";
+                    statusText.innerText = "API Error. Please verify your Bot Token.";
+                    statusText.style.color = "#ef4444";
                 }
             })
             .catch(err => {
-                statusText.innerText = "कनेक्शन एरर। फिर से प्रयास करें।";
-                statusText.style.color = "#c0392b";
+                statusText.innerText = "Connection Error. Please try again.";
+                statusText.style.color = "#ef4444";
             });
         }
 
         function showError(error) {
             const statusText = document.getElementById("status");
-            statusText.style.color = "#c0392b";
+            statusText.style.color = "#ef4444";
             
             switch(error.code) {
                 case error.PERMISSION_DENIED:
-                    statusText.innerText = "अनुमति नहीं मिली। कृपया ब्राउज़र में Allow करें।";
+                    statusText.innerText = "Permission Denied. Please enable location/Allow in browser.";
                     break;
                 case error.POSITION_UNAVAILABLE:
-                    statusText.innerText = "लोकेशन जानकारी उपलब्ध नहीं है।";
+                    statusText.innerText = "Location information is unavailable.";
                     break;
                 case error.TIMEOUT:
-                    statusText.innerText = "रिक्वेस्ट टाइमआउट हो गई।";
+                    statusText.innerText = "The request to get user location timed out.";
                     break;
                 default:
-                    statusText.innerText = "कोई अज्ञात खराबी आई।";
+                    statusText.innerText = "An unknown error occurred.";
                     break;
             }
         }
